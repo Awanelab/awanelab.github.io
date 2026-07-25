@@ -41,13 +41,23 @@
             border-radius: 10px;
             pointer-events: none;
         }
+
+        /* 隐藏音频标签 */
+        audio {
+            display: none;
+        }
     </style>
 </head>
 <body>
 
+    <!-- 遮罩层 -->
     <div id="overlay">
         <span>……？</span>
     </div>
+
+    <!-- 使用 HTML5 标签直连音频，稳定性更高 -->
+    <audio id="soundScare" src="scare_sound.mp3" preload="auto"></audio>
+    <audio id="soundLoop" src="loop_sound.mp3" preload="auto" loop></audio>
 
     <script>
         // ==================== 文件名配置区域 ====================
@@ -55,16 +65,9 @@
             startImage: 'start.jpg',         // 1. 初始伪装图片文件
             scareImage1: 'scare1.jpg',       // 2. 跳脸图片 A 文件
             scareImage2: 'scare2.jpg',       // 3. 跳脸图片 B 文件
-            scareSound: 'scare_sound.mp3',   // 4. 突脸瞬时音效文件
-            loopSound: 'loop_sound.mp3',     // 5. 循环播放的音频文件
-            recoverySeconds: 5               // 6. 几秒后恢复原样（单位：秒）
+            recoverySeconds: 4               // 4. 几秒后恢复原样（单位：秒）
         };
         // ========================================================
-
-        // 预加载音频对象
-        const soundScare = new Audio(fileConfig.scareSound);
-        const soundLoop = new Audio(fileConfig.loopSound);
-        soundLoop.loop = true;
 
         // 预加载图片
         [fileConfig.startImage, fileConfig.scareImage1, fileConfig.scareImage2].forEach(src => {
@@ -80,23 +83,19 @@
             hasTriggered = true;
 
             const overlay = this;
-            overlay.innerHTML = '';
+            overlay.innerHTML = ''; 
 
-            // 【核心修改】：解决浏览器多音频抢占问题的关键逻辑
-            // 1. 先强制播放突脸音效
+            // 获取音频标签
+            const soundScare = document.getElementById('soundScare');
+            const soundLoop = document.getElementById('soundLoop');
+
+            // 1. 立即播放突脸音效
             soundScare.currentTime = 0;
-            soundScare.play().then(() => {
-                // 等突脸音效开始播的一瞬间（或利用事件），再安全地切入循环音频
-                // 或者延时 200 毫秒再起循环音频，避免同一瞬间并发被浏览器拦截
-                setTimeout(() => {
-                    soundLoop.currentTime = 0;
-                    soundLoop.play().catch(e => console.log("循环音频播放拦截", e));
-                }, 100);
-            }).catch(e => {
-                console.log("突脸音效播放拦截", e);
-                // 如果突脸被拦截，保底直接起循环音频
-                soundLoop.play().catch(err => console.log(err));
-            });
+
+            // 2. 错开 150 毫秒再播放循环音频，防止声音通道打架
+            setTimeout(() => {
+                soundLoop.currentTime = 0;
+            }, 150);
 
             // 全屏
             const docEl = document.documentElement;
@@ -126,7 +125,7 @@
                     document.exitFullscreen().catch(() => {});
                 }
 
-                document.title = "……";
+                document.title = "请你离开。";
             }, fileConfig.recoverySeconds * 1000);
         });
     </script>
