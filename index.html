@@ -2,49 +2,129 @@
 <html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>…？</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>你是谁？</title>
     <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+
         #overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,1);
+            /* 初始展示的伪装图片文件 */
+            background-image: url('start.jpg'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-end;
             color: white;
-            font-size: 24px;
+            font-size: 20px;
             z-index: 999;
             cursor: pointer;
+            padding-bottom: 50px;
+            box-sizing: border-box;
+        }
+
+        #overlay span {
+            background: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div id="overlay"></div>
 
-    <video id="myVideo" loop="loop">
-        <source src="yaoyao.mp4" type="video/mp4">
-    </video>
-    <audio id="myAudio" loop="loop">
-        <source src="yaoyao.mp3" type="audio/mpeg">
-    </audio>
+    <!-- 遮罩层 -->
+    <div id="overlay">
+        <span>……？</span>
+    </div>
 
     <script>
-        document.getElementById('overlay').addEventListener('click', function() {
-            // 用户点击后隐藏遮罩层
-            this.style.display = 'none';
-            
-            // 触发音视频播放
-            var video = document.getElementById('myVideo');
-            var audio = document.getElementById('myAudio');
-            video.play();
-            audio.play();
+        // ==================== 文件名配置区域 ====================
+        const fileConfig = {
+            startImage: 'start.jpg',         // 1. 初始伪装图片文件
+            scareImage1: 'scare1.jpg',       // 2. 跳脸图片 A 文件
+            scareImage2: 'scare2.jpg',       // 3. 跳脸图片 B 文件
+            scareSound: 'scare_sound.mp3',   // 4. 突脸瞬时音效文件
+            loopSound: 'loop_sound.mp3',     // 5. 循环播放的音频文件
+            recoverySeconds: 4               // 6. 几秒后恢复原样（单位：秒）
+        };
+        // ========================================================
 
-            // 点击后自动切换标题
-            document.title = "连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️";
+        // 资源预加载
+        const soundScare = new Audio(fileConfig.scareSound);
+        const soundLoop = new Audio(fileConfig.loopSound);
+        soundLoop.loop = true; // 设置循环播放
+
+        // 预加载所有图片防止闪烁延迟
+        [fileConfig.startImage, fileConfig.scareImage1, fileConfig.scareImage2].forEach(src => {
+            const img = new Image();
+            img.src = src;
+        });
+
+        let hasTriggered = false;
+        let flashInterval = null;
+
+        document.getElementById('overlay').addEventListener('click', function() {
+            if (hasTriggered) return;
+            hasTriggered = true;
+
+            const overlay = this;
+            overlay.innerHTML = ''; // 移除提示文字
+
+            // 1. 播放突脸音效
+            soundScare.currentTime = 0;
+            soundScare.play().catch(e => console.log("音效播放拦截", e));
+
+            // 2. 播放循环背景音频
+            soundLoop.currentTime = 0;
+            soundLoop.play().catch(e => console.log("循环音频播放拦截", e));
+
+            // 3. 尝试全屏
+            const docEl = document.documentElement;
+            if (docEl.requestFullscreen) docEl.requestFullscreen();
+
+            // 4. 高频来回切换两张跳脸图片（例如每 150 毫秒切换一次）
+            let toggle = false;
+            flashInterval = setInterval(() => {
+                toggle = !toggle;
+                overlay.style.backgroundImage = `url('${toggle ? fileConfig.scareImage1 : fileConfig.scareImage2}')`;
+            }, 150);
+
+            // 修改网页标题
+            document.title = "连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️";
+
+            // 5. 设定几秒后自动恢复原样
+            setTimeout(() => {
+                // 清除图片闪烁定时器
+                clearInterval(flashInterval);
+
+                // 停止循环音频
+                soundLoop.pause();
+                soundLoop.currentTime = 0;
+
+                // 恢复初始图片和文字
+                overlay.style.backgroundImage = `url('${fileConfig.startImage}')`;
+
+                // 退出全屏（如果支持）
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                }
+
+                document.title = "……？";
+            }, fileConfig.recoverySeconds * 1000);
         });
     </script>
 </body>
