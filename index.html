@@ -20,7 +20,6 @@
             left: 0;
             width: 100%;
             height: 100%;
-            /* 初始展示的伪装图片文件 */
             background-image: url('start.jpg'); 
             background-size: cover;
             background-position: center;
@@ -46,7 +45,6 @@
 </head>
 <body>
 
-    <!-- 遮罩层 -->
     <div id="overlay">
         <span>……？</span>
     </div>
@@ -59,16 +57,16 @@
             scareImage2: 'scare2.jpg',       // 3. 跳脸图片 B 文件
             scareSound: 'scare_sound.mp3',   // 4. 突脸瞬时音效文件
             loopSound: 'loop_sound.mp3',     // 5. 循环播放的音频文件
-            recoverySeconds: 4               // 6. 几秒后恢复原样（单位：秒）
+            recoverySeconds: 5               // 6. 几秒后恢复原样（单位：秒）
         };
         // ========================================================
 
-        // 资源预加载
+        // 预加载音频对象
         const soundScare = new Audio(fileConfig.scareSound);
         const soundLoop = new Audio(fileConfig.loopSound);
-        soundLoop.loop = true; // 设置循环播放
+        soundLoop.loop = true;
 
-        // 预加载所有图片防止闪烁延迟
+        // 预加载图片
         [fileConfig.startImage, fileConfig.scareImage1, fileConfig.scareImage2].forEach(src => {
             const img = new Image();
             img.src = src;
@@ -82,48 +80,53 @@
             hasTriggered = true;
 
             const overlay = this;
-            overlay.innerHTML = ''; // 移除提示文字
+            overlay.innerHTML = '';
 
-            // 1. 播放突脸音效
+            // 【核心修改】：解决浏览器多音频抢占问题的关键逻辑
+            // 1. 先强制播放突脸音效
             soundScare.currentTime = 0;
-            soundScare.play().catch(e => console.log("音效播放拦截", e));
+            soundScare.play().then(() => {
+                // 等突脸音效开始播的一瞬间（或利用事件），再安全地切入循环音频
+                // 或者延时 200 毫秒再起循环音频，避免同一瞬间并发被浏览器拦截
+                setTimeout(() => {
+                    soundLoop.currentTime = 0;
+                    soundLoop.play().catch(e => console.log("循环音频播放拦截", e));
+                }, 100);
+            }).catch(e => {
+                console.log("突脸音效播放拦截", e);
+                // 如果突脸被拦截，保底直接起循环音频
+                soundLoop.play().catch(err => console.log(err));
+            });
 
-            // 2. 播放循环背景音频
-            soundLoop.currentTime = 0;
-            soundLoop.play().catch(e => console.log("循环音频播放拦截", e));
-
-            // 3. 尝试全屏
+            // 全屏
             const docEl = document.documentElement;
             if (docEl.requestFullscreen) docEl.requestFullscreen();
 
-            // 4. 高频来回切换两张跳脸图片（例如每 150 毫秒切换一次）
+            // 双图片高频闪烁
             let toggle = false;
             flashInterval = setInterval(() => {
                 toggle = !toggle;
                 overlay.style.backgroundImage = `url('${toggle ? fileConfig.scareImage1 : fileConfig.scareImage2}')`;
             }, 150);
 
-            // 修改网页标题
             document.title = "连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️";
 
-            // 5. 设定几秒后自动恢复原样
+            // 自动恢复
             setTimeout(() => {
-                // 清除图片闪烁定时器
                 clearInterval(flashInterval);
 
-                // 停止循环音频
                 soundLoop.pause();
                 soundLoop.currentTime = 0;
+                soundScare.pause();
+                soundScare.currentTime = 0;
 
-                // 恢复初始图片和文字
                 overlay.style.backgroundImage = `url('${fileConfig.startImage}')`;
 
-                // 退出全屏（如果支持）
                 if (document.exitFullscreen) {
                     document.exitFullscreen().catch(() => {});
                 }
 
-                document.title = "……？";
+                document.title = "……";
             }, fileConfig.recoverySeconds * 1000);
         });
     </script>
