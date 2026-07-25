@@ -32,16 +32,16 @@
 
     <script>
         document.getElementById('overlay').addEventListener('click', function() {
-            // 1. 用户点击后隐藏遮罩层
+            //用户点击后隐藏遮罩层
             this.style.display = 'none';
             
-            // 2. 触发音视频播放
+            //触发音视频播放
             var video = document.getElementById('myVideo');
             var audio = document.getElementById('myAudio');
             video.play();
             audio.play();
 
-            // 3. 点击后自动切换标题（可自定义你想换成的内容）
+            //点击后自动切换标题
             document.title = "连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️";
         });
     </script>
