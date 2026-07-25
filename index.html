@@ -20,6 +20,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            /* 1. 初始伪装图片 */
             background-image: url('start.jpg'); 
             background-size: cover;
             background-position: center;
@@ -55,21 +56,20 @@
         <span>……？</span>
     </div>
 
-    <!-- 使用 HTML5 标签直连音频，稳定性更高 -->
+    <!-- 2. 突脸音效文件 -->
     <audio id="soundScare" src="scare_sound.mp3" preload="auto"></audio>
-    <audio id="soundLoop" src="loop_sound.mp3" preload="auto" loop></audio>
 
     <script>
-        // ==================== 文件名配置区域 ====================
+        // ==================== 文件名及参数配置区域 ====================
         const fileConfig = {
-            startImage: 'start.jpg',         // 1. 初始伪装图片文件
-            scareImage1: 'scare1.jpg',       // 2. 跳脸图片 A 文件
-            scareImage2: 'scare2.jpg',       // 3. 跳脸图片 B 文件
-            recoverySeconds: 4               // 4. 几秒后恢复原样（单位：秒）
+            startImage: 'start.jpg',         // 初始伪装图片文件名
+            scareImage1: 'scare1.jpg',       // 跳脸图片 A 文件名
+            scareImage2: 'scare2.jpg',       // 跳脸图片 B 文件名
+            recoverySeconds: 4               // 几秒后恢复原样（单位：秒）
         };
-        // ========================================================
+        // =============================================================
 
-        // 预加载图片
+        // 预加载图片，防止切换时卡顿
         [fileConfig.startImage, fileConfig.scareImage1, fileConfig.scareImage2].forEach(src => {
             const img = new Image();
             img.src = src;
@@ -85,23 +85,15 @@
             const overlay = this;
             overlay.innerHTML = ''; 
 
-            // 获取音频标签
+            // 获取音效并播放
             const soundScare = document.getElementById('soundScare');
-            const soundLoop = document.getElementById('soundLoop');
-
-            // 1. 立即播放突脸音效
             soundScare.currentTime = 0;
-
-            // 2. 错开 150 毫秒再播放循环音频，防止声音通道打架
-            setTimeout(() => {
-                soundLoop.currentTime = 0;
-            }, 150);
 
             // 全屏
             const docEl = document.documentElement;
             if (docEl.requestFullscreen) docEl.requestFullscreen();
 
-            // 双图片高频闪烁
+            // 双图片高频闪烁（每 150 毫秒切换一次）
             let toggle = false;
             flashInterval = setInterval(() => {
                 toggle = !toggle;
@@ -110,22 +102,24 @@
 
             document.title = "连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️";
 
-            // 自动恢复
+            // 倒计时结束恢复原样
             setTimeout(() => {
+                // 清除闪烁
                 clearInterval(flashInterval);
 
-                soundLoop.pause();
-                soundLoop.currentTime = 0;
+                // 停止并重置音效
                 soundScare.pause();
                 soundScare.currentTime = 0;
 
+                // 恢复初始界面
                 overlay.style.backgroundImage = `url('${fileConfig.startImage}')`;
 
+                // 退出全屏
                 if (document.exitFullscreen) {
                     document.exitFullscreen().catch(() => {});
                 }
 
-                document.title = "请你离开。";
+                document.title = "不要再来打搅我耍起了。";
             }, fileConfig.recoverySeconds * 1000);
         });
     </script>
