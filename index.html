@@ -3,14 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️</title>
+    <title></title>
+    <style>
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgb(0,0,0);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            z-index: 999;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <video autoplay="autoplay" loop="loop">
-        <source src="yaoyao.mp4" type="video/mp4"></source>
+    <video id="myVideo" loop="loop">
+        <source src="yaoyao.mp4" type="video/mp4">
     </video>
-    <audio autoplay="autoplay" loop="loop">
-        <source src="yaoyao.mp3" type="audio/mpeg"></source>
+    <audio id="myAudio" loop="loop">
+        <source src="yaoyao.mp3" type="audio/mpeg">
     </audio>
+
+    <script>
+        document.getElementById('overlay').addEventListener('click', function() {
+            // 1. 用户点击后隐藏遮罩层
+            this.style.display = 'none';
+            
+            // 2. 触发音视频播放
+            var video = document.getElementById('myVideo');
+            var audio = document.getElementById('myAudio');
+            video.play();
+            audio.play();
+
+            // 3. 点击后自动切换标题（可自定义你想换成的内容）
+            document.title = "连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️连哥哥也要放弃幺幺吗👁️";
+        });
+    </script>
 </body>
 </html>
